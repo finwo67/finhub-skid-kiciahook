@@ -17861,7 +17861,10 @@ local function KiciaQueueTeleport()
         if type(override) == "string" and override ~= "" then url = override end
     end)
 
-    local safeUrl = tostring(url):gsub("'", "\\'")
+    -- Add a cache buster to force the executor to download the newest version
+    local cacheBuster = "?t=" .. tostring(os.time())
+    local safeUrl = tostring(url .. cacheBuster):gsub("'", "\\'")
+    
     local chunk = ("task.wait(%d) loadstring(game:HttpGet('%s'))()")
         :format(RERUN_DELAY, safeUrl)
 
