@@ -17849,7 +17849,7 @@ return { Page = v120, Grid = v121 }
 end
 
 local KICIA_RERUN_URL = "https://raw.githubusercontent.com/finwo67/finhub-skid-kiciahook/refs/heads/main/kiciahook"
-local RERUN_DELAY     = 2 -- seconds to wait after teleport before loading
+local RERUN_DELAY     = 3 -- seconds to wait after teleport before loading
 
 local function KiciaQueueTeleport()
     local queueFn = K.fn("queue_on_teleport") or K.fn("queueonteleport")
@@ -19972,6 +19972,46 @@ end
 return bj.c
 end
 end
+do -- ctr
+local function fn35()
+return {
+NebulaCounter = {
+Enabled = false,
+Mode = "ue counter",
+Hud = true,
+KiciaCycleMs = 50,
+KiciaFlyMs = 25,
+KiciaBoost = 100000,
+KiciaBoostMs = 600,
+KiciaFlySpeed = 15000,
+KiciaZigAmp = 400,
+KiciaZigFreq = 8,
+KiciaDepth = 6,
+KiciaRadius = 30,
+VoidSpeed = 3000,
+Legits = true,
+Bots = true,
+MaxLegits = 1,
+LegitDelay = 3,
+LegitStay = 35,
+LegitGap = 50,
+LegitLead = 6,
+BotStay = 35,
+BotGap = 50,
+BotLead = 6,
+},
+}
+end
+tbl17.ctr = function()
+local ctr = tbl17.cache.ctr
+if not ctr then
+local ctr2 = { c = fn35() }
+tbl17.cache.ctr = ctr2
+ctr = ctr2
+end
+return ctr.c
+end
+end
 do -- bk
 local function fn35() tbl17 .a9();return{ItemModifiers={NoMotion=false,NoCameraShake=false,NoCameraSway=false,NoShootAnimation=false,NoSprintAnimation=false,NoEquipAnimation=false,NoReloadAnimation=false,NoSpread=false,AimCooldown={Enabled=false,Percentage=50},Recoil={Enabled=false,Percentage=75},FireCooldown={Enabled=false,Percentage=25},AimSpeed={Enabled=false,Percentage=300},MeleeCooldown={Enabled=false,Percentage=25},DashCooldown={Enabled=false,Percentage=25},ExtendMeleeRange={Enabled=false,Range=10},InfiniteDoubleJumps=false,AlwaysBackstab=false,FastShoot=false,FastProjectile=false,FullAuto=false,FireRate={Enabled=false,Percentage=100},GrenadeFuse={Enabled=false,ExplodeOn="Impact",RemoveFuse=false}},BulletTracers={Enabled=false,Color=Color3.fromRGB(120,220,255),Width=0.06,Lifetime=0.6,FadeTime=0.35,Style="Beam",TextureLength=4,TextureSpeed=1,Emission=1,Glow=1,Expand=true,ExpandSpeed=18,ExpandDamper=0.7},ViewModelOffset={Enabled=false,X=0,Y=0,Z=0,Pitch=0,Yaw=0,Roll=0},Chams={Character={Enabled=false,Material="Ghost",Color=Color3.fromRGB(255,255,255),Transparency=0,StripTextures=false},Arms={Enabled=false,Material="Ghost",Color=Color3.fromRGB(255,255,255),Transparency=0,StripTextures=true},Item={Enabled=false,Material="Ghost",Color=Color3.fromRGB(255,255,255),Transparency=0,StripTextures=false}},ViewModelHighlight={Arms={Enabled=false,AlwaysOnTop=false,FillColor=Color3.fromRGB(255,255,255),FillTransparency=0.5,OutlineColor=Color3.fromRGB(255,255,255),OutlineTransparency=0},Item={Enabled=false,AlwaysOnTop=false,FillColor=Color3.fromRGB(255,255,255),FillTransparency=0.5,OutlineColor=Color3.fromRGB(255,255,255),OutlineTransparency=0}},ViewModelWireframe={Arms={Enabled=false,Color=Color3.fromRGB(255,255,255),Width=0.0025},Item={Enabled=false,Color=Color3.fromRGB(255,255,255),Width=0.0025}},PlayerHit={Enabled=false,Sound={Enabled=false,DisableGameSound=false,HeadName=nil,BodyName=nil,HeadVolume=1,HeadPitch=1,BodyVolume=1,BodyPitch=1},Notification={Enabled=false,Text="Hit %DNAME% (%NAME%) for %DMG% in %PART%"},Chams={Enabled=false,Color=Color3.fromRGB(255,0,0),Transparency=0,Duration=0.8,Material="Ghost"},HitFlash={Enabled=false,Color=Color3.fromRGB(90,170,255),Duration=1.35}},PlayerElimination={Enabled=false,Sound={Enabled=false,Name=nil,Volume=1,Pitch=1},Notification={Enabled=false,Text="Eliminated %DNAME% (%NAME%)"},Chams={Enabled=false,Color=Color3.fromRGB(255,0,0),Transparency=0,Duration=0.8,Material="Ghost"},KillFlash={Enabled=false,Color=Color3.fromRGB(90,170,255),Duration=1.35}}};end
 
@@ -19985,6 +20025,188 @@ bk = bk2
 end
 
 return bk.c
+end
+end
+do -- nbc
+local function fn35()
+local store = tbl17.bG()
+local trove = tbl17.k()
+local players = cloneref(game:GetService("Players"))
+local K2 = { t0 = 0, boostAt = 0, fly = Vector3.zero, stop = nil, stopIdx = -1, spawn = nil, list = {}, last = nil }
+local UE = { voidState = 2, voidT = 0, lastRandTp = 0 }
+local function cfg(n) local c = store.Data.NebulaCounter return c and c[n] end
+local function cycleTimes()
+local cycle = math.max(cfg("KiciaCycleMs") or 50, 5) / 1000
+local fly = math.min((cfg("KiciaFlyMs") or 25) / 1000, cycle * 0.95)
+return cycle, fly
+end
+local function buildSpawnList(spawn)
+K2.spawn = spawn K2.list = {}
+local depth = cfg("KiciaDepth") or 6
+local radius = cfg("KiciaRadius") or 30
+local rng = Random.new()
+local params = RaycastParams.new()
+params.FilterType = Enum.RaycastFilterType.Exclude
+local char = players.LocalPlayer.Character
+if char then params.FilterDescendantsInstances = { char } end
+for _ = 1, 60 do
+if #K2.list >= 16 then break end
+local angle = rng:NextNumber(0, math.pi * 2)
+local dist = rng:NextNumber(4, math.max(radius, 5))
+local origin = spawn + Vector3.new(math.cos(angle) * dist, 8, math.sin(angle) * dist)
+local hit = workspace:Raycast(origin, Vector3.new(0, -30, 0), params)
+if hit and hit.Normal.Y > 0.7 then
+K2.list[#K2.list + 1] = hit.Position - Vector3.new(0, depth, 0)
+end
+end
+end
+local function resolveStopPos(mode, spawn)
+local fallback = spawn - Vector3.new(0, cfg("KiciaDepth") or 6, 0)
+if mode ~= "Solix counter" then return fallback end
+if K2.spawn ~= spawn then buildSpawnList(spawn) end
+local n = #K2.list
+if n == 0 then return fallback end
+local idx = math.random(1, n)
+if n > 1 and idx == K2.last then idx = idx % n + 1 end
+K2.last = idx
+return K2.list[idx]
+end
+local function kiciaSolixInit(root, now)
+K2.t0 = now K2.boostAt = now
+K2.spawn = root.Position K2.fly = root.Position
+K2.stop, K2.stopIdx = nil, -1
+end
+local function kiciaSolixStep(mode, root, dt)
+local now = os.clock()
+local t = now - K2.t0
+local cycle, flyWindow = cycleTimes()
+local flying = (t % cycle) < flyWindow
+if now >= K2.boostAt then
+if flying then K2.fly += Vector3.new(0, cfg("KiciaBoost") or 100000, 0) end
+K2.boostAt = now + (cfg("KiciaBoostMs") or 600) / 1000
+end
+if not flying then
+local idx = math.floor(t / cycle)
+if idx ~= K2.stopIdx or not K2.stop then
+K2.stopIdx = idx K2.stop = resolveStopPos(mode, K2.spawn)
+end
+root.CFrame = CFrame.new(K2.stop) * CFrame.Angles(math.pi / 2, 0, 0)
+else
+local zig = math.cos(t * (cfg("KiciaZigFreq") or 8)) * (cfg("KiciaZigAmp") or 400) * dt
+K2.fly += Vector3.new(zig, (cfg("KiciaFlySpeed") or 15000) * dt, 0)
+root.CFrame = CFrame.new(K2.fly) * CFrame.Angles(-math.pi / 2, 0, 0)
+end
+root.AssemblyLinearVelocity = Vector3.zero
+end
+local index2 = {} index2.__index = index2
+index2.new = function()
+local hud = Instance.new("ScreenGui")
+hud.Name = "NebulaHUD" hud.ResetOnSpawn = false hud.DisplayOrder = 90
+hud.Parent = K.hudParent()
+local lbl = Instance.new("TextLabel")
+lbl.AnchorPoint = Vector2.new(0.5, 0)
+lbl.Position = UDim2.new(0.5, 0, 0, 60)
+lbl.Size = UDim2.fromOffset(340, 24)
+lbl.BackgroundTransparency = 0.5
+lbl.BackgroundColor3 = Color3.new(0, 0, 0)
+lbl.TextColor3 = Color3.new(1, 1, 1)
+lbl.Font = Enum.Font.Code lbl.TextSize = 14
+lbl.Text = "Nebula: off" lbl.Visible = false
+lbl.Parent = hud
+return setmetatable({ _trove = trove.new("nebula_counter"), _hud = lbl, _started = false, _mode = nil, _status = "off" }, index2)
+end
+index2.Update = function(arg, dt)
+local on = cfg("Enabled")
+if on and store.Data.Ragebot and store.Data.Ragebot.Enabled then
+    store:Set({"Ragebot", "Enabled"}, false)
+end
+local showHud = cfg("Hud")
+arg._hud.Visible = on and showHud
+if not on then
+if arg._started then arg._started, arg._mode = false, nil end
+arg._status = "off" arg._hud.Text = "Nebula: off"
+return
+end
+local player = players.LocalPlayer
+local char = player and player.Character
+local hum = char and char:FindFirstChildOfClass("Humanoid")
+local root = char and char:FindFirstChild("HumanoidRootPart")
+if not (root and hum) then
+arg._status = "no character" arg._hud.Text = "Nebula: no character"
+return
+end
+local mode = cfg("Mode") or "ue counter"
+if arg._started and arg._mode and mode ~= arg._mode then
+arg._status = ("restart to switch to %s"):format(mode)
+mode = arg._mode
+end
+if not arg._started then
+arg._started, arg._mode = true, mode
+if mode == "Kicia counter" or mode == "Solix counter" then kiciaSolixInit(root, os.clock()) end
+end
+if mode == "Kicia counter" or mode == "Solix counter" then
+pcall(kiciaSolixStep, mode, root, dt)
+arg._status = mode
+else
+hum.PlatformStand = true
+hum.WalkSpeed = 0
+local now = os.clock()
+if UE.voidState == 1 then
+if now - UE.voidT >= 15 then UE.voidState, UE.voidT = 2, now end
+pcall(function() root.AssemblyLinearVelocity = Vector3.new(0, cfg("VoidSpeed") or 3000, 0) end)
+if now - UE.lastRandTp >= 10 then
+UE.lastRandTp = now
+pcall(function()
+root.CFrame = CFrame.new(root.Position + Vector3.new(math.random(-2500,2500), math.random(500,1200), math.random(-2500,2500))) * CFrame.Angles(-math.pi/2,0,0)
+end)
+end
+else
+local y = root.Position.Y
+pcall(function()
+root.CFrame = CFrame.new(root.Position.X, y - (y - (y - 1000)) * 0.5, root.Position.Z) * CFrame.Angles(-math.pi/2,0,0)
+end)
+UE.voidState, UE.voidT, UE.lastRandTp = 1, now, now
+end
+arg._status = "in the void"
+end
+arg._hud.Text = ("Nebula [%s]: %s"):format(arg._mode or "?", arg._status)
+end
+index2.Stop = function(arg)
+arg._started, arg._mode, arg._status = false, nil, "off"
+local p = players.LocalPlayer
+local c = p and p.Character
+local r = c and c:FindFirstChild("HumanoidRootPart")
+if r then pcall(function() r.AssemblyLinearVelocity = Vector3.zero end) end
+end
+index2.Destroy = function(arg) arg:Stop() arg._trove:Destroy() end
+return index2
+end
+tbl17.nbc = function()
+local nbc = tbl17.cache.nbc
+if not nbc then nbc = { c = fn35() } tbl17.cache.nbc = nbc end
+return nbc.c
+end
+end
+
+do -- nbUI
+local function fn35()
+return function(grid)
+local function P(...) local t = { "NebulaCounter" } for i = 1, select("#", ...) do t[#t+1] = select(i, ...) end return t end
+local u = grid:AddSection({ Title = "Nebula Counter", Side = "right" })
+u:AddToggle({ Label = "Enable Counter", Config = P("Enabled") })
+u:AddDropdown({ Label = "Mode", Options = { "ue counter", "Kicia counter", "Solix counter" }, Config = P("Mode") })
+u:AddToggle({ Label = "Show HUD", Config = P("Hud") })
+u:AddSlider({ Label = "Void Speed", Min = 0, Max = 20000, Config = P("VoidSpeed") })
+u:AddSlider({ Label = "Kicia Cycle (ms)", Min = 5, Max = 500, Config = P("KiciaCycleMs") })
+u:AddSlider({ Label = "Kicia Fly Speed", Min = 100, Max = 50000, Config = P("KiciaFlySpeed") })
+u:AddSlider({ Label = "Kicia Boost", Min = 0, Max = 1000000, Config = P("KiciaBoost") })
+u:AddSlider({ Label = "Kicia Depth", Min = 0, Max = 30, Config = P("KiciaDepth") })
+end
+end
+tbl17.nbUI = function()
+local nbUI = tbl17.cache.nbUI
+if not nbUI then nbUI = { c = fn35() } tbl17.cache.nbUI = nbUI end
+return nbUI.c
 end
 end
 do -- bl
@@ -20011,7 +20233,7 @@ local v118 = tbl17.bg()
 local v119 = tbl17.bh()
 local v120 = tbl17.bi()
 local v121 = tbl17.bj()
-local tbl18 = { v116, v118, tbl17.bk(), v120, tbl17.bl(), v115, v117, v121, v119 }
+local tbl18 = { v116, v118, tbl17.bk(), v120, tbl17.bl(), v115, v117, v121, v119, tbl17.ctr() }
 local tbl19 = {}
 
 for _, v122 in tbl18, nil, nil do
@@ -59596,7 +59818,7 @@ return ii.c
 end
 end
 do -- ij
-local function fn35()local I,W,N,P= tbl17 .aU(), tbl17 .gR(), tbl17 .aW(), tbl17 .aY(); tbl17 .aE(); tbl17 .hN();local a,e,c,E,p,T,t,x,S= tbl17 .h0(), tbl17 .h7(), tbl17 .h8(), tbl17 .h9(), tbl17 .ia(), tbl17 .ib(), tbl17 .ic(), tbl17 .id(),{Combat="rbxassetid://99199363807265",CameraAim="rbxassetid://83752373575368",SilentAim="rbxassetid://109514269737059",FireAssist="rbxassetid://81854854241463",WeaponHandling="rbxassetid://128279962545721",HitFeedback="rbxassetid://140427675871522",Ragebot="rbxassetid://125012650497883"};return function(J,B)local X=B:AddTab({Label="Combat",Icon=S.Combat,Description="Aim assistance, fire control, weapon handling, feedback, and ragebot."});local H=X:AddTab({Label="Aimbot",Icon=S.CameraAim,Description="Camera-based aim assistance and target locking."});local k,D=H:Grid({Columns=2}),table.clone(I.BuildSpec);D.PinHint="Hold a weapon, then click the pin next to a setting to give that weapon its own value.";a(J.StoreProfiles,e(k,D));D,k=X:AddTab({Label="Silent Aim",Icon=S.SilentAim,Description="Redirect projectiles toward targets without moving the camera."}):Grid({Columns=2}),table.clone(N.BuildSpec);k.PinHint="Hold a weapon, then click the pin next to a setting to give that weapon its own value.";a(J.StoreProfiles,E(D,k));k=X:AddTab({Label="Ragebot",Icon=S.Ragebot,Description="Aggressive targeting, weapon priority, and evasive movement."}):Grid({Columns=2});if W.IsArcadeServer then  tbl17 .ie()(k);else  tbl17 .ih()(k);end;D,k=X:AddTab({Label="Fire Assist",Icon=S.FireAssist,Description="Automatic firing and fast camera flicks."}):Grid({Columns=2}),table.clone(P.BuildSpec);k.PinHint="Hold a weapon, then click the pin next to a setting to give that weapon its own value.";a(J.StoreProfiles,p(D,k)); tbl17 .ii()(D,function()H:Open();end);x((X:AddTab({Label="Weapon Handling",Icon=S.WeaponHandling,Description="Aim, firing, cooldown, melee, and grenade behavior."}):Grid({Columns=2})));D,k=X:AddTab({Label="Hit Feedback",Icon=S.HitFeedback,Description="Sound, visual, flash, and notification feedback."}):Grid({Columns=2}),c(B,J.SfxSoundStorage);t(J,D,k);T(J,D,k);end;end
+local function fn35()local I,W,N,P= tbl17 .aU(), tbl17 .gR(), tbl17 .aW(), tbl17 .aY(); tbl17 .aE(); tbl17 .hN();local a,e,c,E,p,T,t,x,S= tbl17 .h0(), tbl17 .h7(), tbl17 .h8(), tbl17 .h9(), tbl17 .ia(), tbl17 .ib(), tbl17 .ic(), tbl17 .id(),{Combat="rbxassetid://99199363807265",CameraAim="rbxassetid://83752373575368",SilentAim="rbxassetid://109514269737059",FireAssist="rbxassetid://81854854241463",WeaponHandling="rbxassetid://128279962545721",HitFeedback="rbxassetid://140427675871522",Ragebot="rbxassetid://125012650497883"};return function(J,B)local X=B:AddTab({Label="Combat",Icon=S.Combat,Description="Aim assistance, fire control, weapon handling, feedback, and ragebot."});local H=X:AddTab({Label="Aimbot",Icon=S.CameraAim,Description="Camera-based aim assistance and target locking."});local k,D=H:Grid({Columns=2}),table.clone(I.BuildSpec);D.PinHint="Hold a weapon, then click the pin next to a setting to give that weapon its own value.";a(J.StoreProfiles,e(k,D));D,k=X:AddTab({Label="Silent Aim",Icon=S.SilentAim,Description="Redirect projectiles toward targets without moving the camera."}):Grid({Columns=2}),table.clone(N.BuildSpec);k.PinHint="Hold a weapon, then click the pin next to a setting to give that weapon its own value.";a(J.StoreProfiles,E(D,k));k=X:AddTab({Label="Ragebot",Icon=S.Ragebot,Description="Aggressive targeting, weapon priority, and evasive movement."}):Grid({Columns=2});if W.IsArcadeServer then  tbl17 .ie()(k);else  tbl17 .ih()(k);end;tbl17.nbUI()(k);D,k=X:AddTab({Label="Fire Assist",Icon=S.FireAssist,Description="Automatic firing and fast camera flicks."}):Grid({Columns=2}),table.clone(P.BuildSpec);k.PinHint="Hold a weapon, then click the pin next to a setting to give that weapon its own value.";a(J.StoreProfiles,p(D,k)); tbl17 .ii()(D,function()H:Open();end);x((X:AddTab({Label="Weapon Handling",Icon=S.WeaponHandling,Description="Aim, firing, cooldown, melee, and grenade behavior."}):Grid({Columns=2})));D,k=X:AddTab({Label="Hit Feedback",Icon=S.HitFeedback,Description="Sound, visual, flash, and notification feedback."}):Grid({Columns=2}),c(B,J.SfxSoundStorage);t(J,D,k);T(J,D,k);end;end
 
 tbl17.ij = function()
 local ij = tbl17.cache.ij
@@ -61043,7 +61265,7 @@ return je.c
 end
 end
 do -- jf
-local function fn35()local I,W= tbl17 .bG(), tbl17 .aE(); tbl17 .hN();local N,P,a,e,c,E,p,T= tbl17 .h_(), tbl17 .ij(), tbl17 .ip(), tbl17 .n(), tbl17 .iw(), tbl17 .i_(), tbl17 .je(),cloneref(game:GetService("Players")).LocalPlayer;return function(l)if getgenv().KhForceMobileUi==true then W.ForceMobileLayout();end;local t=W.Menu.new({Icon=K.LithiumLogo,Title=string.format("kiciahook but better | %s",tostring("premium Build")),Directory="kiciarebuild/rivals",Config=l.ReactiveStoreAdapter,ColorAnimation=l.ColorAnimation,Persistence=I,State=l.GeneralState,StateData=l.GeneralStateData,OnUnload=function()e:Destroy();end});e:Add(t);local I=l.PlayerIdentities;t:SetWatermarkUsername(I:GetPresented(T));e:Connect(I.IdentityChanged,function(W)if W==T then t:SetWatermarkUsername(I:GetPresented(T));end;end);P(l,t);E(l,t);c(l,t);N(l,t);p(l,t);a(l,t);t:AddSettingsTab();t:SetVisible(not(l.GeneralStateData.SilentLoad==true),true);end;end
+local function fn35()local I,W= tbl17 .bG(), tbl17 .aE(); tbl17 .hN();local N,P,a,e,c,E,p,T= tbl17 .h_(), tbl17 .ij(), tbl17 .ip(), tbl17 .n(), tbl17 .iw(), tbl17 .i_(), tbl17 .je(),cloneref(game:GetService("Players")).LocalPlayer;return function(l)if getgenv().KhForceMobileUi==true then W.ForceMobileLayout();end;local t=W.Menu.new({Icon=K.LithiumLogo,Title=string.format("kiciahook but better | %s",tostring("premium Build")),Directory="kiciarebuild/rivals",Config=l.ReactiveStoreAdapter,ColorAnimation=l.ColorAnimation,Persistence=I,State=l.GeneralState,StateData=l.GeneralStateData,OnUnload=function()e:Destroy();end});e:Add(t);local I=l.PlayerIdentities;t:SetWatermarkUsername(I:GetPresented(T));e:Connect(I.IdentityChanged,function(W)if W==T then t:SetWatermarkUsername(I:GetPresented(T));end;end);P(l,t);E(l,t);c(l,t);N(l,t);p(l,t);a(l,t);pcall(tbl17.nbUI(),l,t);t:AddSettingsTab();t:SetVisible(not(l.GeneralStateData.SilentLoad==true),true);end;end
 
 tbl17.jf = function()
 local jf = tbl17.cache.jf
@@ -66910,6 +67132,7 @@ armAvatarSpoofer()
 end
 
 local v190 = v147:Add(v144.new())
+local vNbc = v147:Add(tbl17.nbc().new())
 local v191 = v147:Add(v135.new())
 local v192 = v147:Add(v168.new())
 local v193 = v147:Add(v132.new())
@@ -67026,6 +67249,7 @@ end)
 v239:SetHeartbeat(function(arg2)
 v199:HeartbeatUpdate()
 v190:Update(arg2)
+if vNbc then vNbc:Update(arg2) end
 
 if v225 then
 v225:Update(arg2)
